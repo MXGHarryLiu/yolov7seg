@@ -15,7 +15,6 @@ import numpy as np
 class YOLOV7Segmenter(object):
 
     def __init__(self,
-                 data = '',
                  weights = '',
                  device = 'cpu'):
         '''
@@ -28,7 +27,7 @@ class YOLOV7Segmenter(object):
 
         # Load model
         self.device = select_device(device)
-        model = DetectMultiBackend(weights, device=device, dnn=False, data=data, fp16=False)
+        model = DetectMultiBackend(weights, device=device, dnn=False, data=None, fp16=False)
         self.model = model
         self.stride, names, pt = model.stride, model.names, model.pt
         self.imgsz = check_img_size(imgsz, s=self.stride)  # check image size
@@ -36,7 +35,7 @@ class YOLOV7Segmenter(object):
 
         # Run inference
         bs = 1  # batch_size
-        model.warmup(imgsz=(1 if pt else bs, 3, *self.imgsz))  # warmup
+        # model.warmup(imgsz=(1 if pt else bs, 3, *self.imgsz))  # warmup
         
 
     def segment(self, I):
@@ -47,6 +46,7 @@ class YOLOV7Segmenter(object):
 
         # path, im, im0s, vid_cap, s = next(iter(dataset)) # assume only one item
         # im0 = cv2.imread(source) # im0 should be (x, y, 3)
+        I = np.array(I)
         im = letterbox(I, self.imgsz, stride=self.stride, auto=True)[0]  # padded resize
         im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
         im = np.ascontiguousarray(im)  # contiguous
@@ -71,6 +71,8 @@ class YOLOV7Segmenter(object):
         # if len(det):
         masks = process_mask(proto[i], det[:, 6:], det[:, :4], im.shape[2:], upsample=True)  # HWC
         
+        # masks = masks.numpy();
+
         return masks
 
-s = YOLOV7Segmenter(data, weights, device)
+s = YOLOV7Segmenter(weights, device)
